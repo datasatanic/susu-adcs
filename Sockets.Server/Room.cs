@@ -1,108 +1,76 @@
-using System.Net.Sockets;
-using System.Text;
-
 namespace Sockets;
 
 public class RoomFactory
 {
-    public List<Room> CurrentRooms = new();
+    public static CancellationTokenSource TokenSource = new();
 
-    public Task<Room> CreateRoom(string Name, CancellationToken token)
+    public Room? this[string name] => CurrentRooms.FirstOrDefault(room => room.Name == name, null);
+
+    public List<Room> CurrentRooms => new();
+
+    public Task<Room> StartRoom(string Name)
     {
-        Room room = new Room() {Name = Name, token = token};
+        var room = new Room { Name = Name };
         CurrentRooms.Add(room);
-        Task.Run(room.Serve);
-        Console.WriteLine($"Room: {Name} created");
+        Task.Run(() => room.Serve(TokenSource.Token));
         return Task.FromResult(room);
     }
 
-    public Room? this[string name] => CurrentRooms.FirstOrDefault(room => room.Name == name, null);
+    public void StopAll()
+    {
+        foreach (var room in CurrentRooms) room.Stop();
+    }
 }
 
 public class Room
 {
-    public List<TcpClient> clients { get; set; } = new();
-
     public string Name { get; set; }
-    public CancellationToken token { get; init; }
+    public List<Client> clients { get; set; } = new();
 
-    public async Task UserConnected(TcpClient client, string user)
+    public bool IsCancelled { get; set; }
+
+
+    public async Task AddUser(Client client, string user)
     {
         clients.Add(client);
-        foreach (var _client in clients.Where(tcpClient => tcpClient != client))
+        var hello_msg = new Message
         {
-            Message hello_msg = new Message()
-            {
-                RoomName = Name, Text = $"User {user} connected!",
-                UserName = ""
-            };
-            await _client.GetStream().WriteAsync(hello_msg.Serialiaze());
-        }
+            Type = MessageType.System,
+            RoomName = Name, Text = $"User {user} connected!",
+            UserName = ""
+        };
+        await SendToAll(hello_msg, client);
 
         Console.WriteLine($"{Name}: {user} connected");
     }
 
-    public async Task Serve()
+    public async Task SendToAll(Message message, Client? client = null)
     {
-        while (!token.IsCancellationRequested)
-        {
+        if (client is null)
+            foreach (var _client in clients)
+                _client.WriteMessage(message);
+        else
+            foreach (var _client in clients.Where(tcpClient => tcpClient != client))
+                _client.WriteMessage(message);
+    }
+
+    public async Task Serve(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested || !IsCancelled)
             foreach (var client in clients)
-            {
-                var stream = client.GetStream();
-                if (!stream.DataAvailable)
+                if (client.DataAvailable)
                 {
-                    continue;
+                    var message = client.ReadMessage();
+                    await SendToAll(message, client);
                 }
 
-                BinaryReader reader = new BinaryReader(stream);
-                var message = Message.Deserialize(reader.ReadString());
-                foreach (var _client in clients.Where(tcpClient => tcpClient != client))
-                {
-                    await _client.GetStream().WriteAsync(message.Serialiaze());
-                }
-            }
-        }
-    }
-}
-
-// Протокол
-// <Комната><US><Имя Пользователя><STX><Сообщение><EOT>
-public struct Message
-{
-    public Message()
-    {
+        await SendToAll(new Message
+            { Type = MessageType.System, UserName = "", Text = "Room is closed", RoomName = Name });
+        foreach (var client in clients) client.Close();
     }
 
-    private const char STX = (char) 0x02;
-    private const char EOT = (char) 0x04;
-    private const char US = (char) 0x1F;
-
-    public string RoomName { get; set; } = "General";
-    public DateTime Time { get; set; } = DateTime.Now;
-    public string UserName { get; set; } = "";
-    public string Text { get; set; } = "";
-
-    public static Message Deserialize(byte[] msg) => Deserialize(Encoding.UTF8.GetString(msg));
-
-    public static Message Deserialize(string msg)
+    public async Task Stop()
     {
-        string[] s = msg.TrimEnd(EOT).Split(STX);
-        string[] head = s[0].Split(US);
-        return new Message
-        {
-            Text = s[1],
-            RoomName = head[0],
-            UserName = head[1]
-        };
-    }
-
-    public byte[] Serialiaze()
-    {
-        return Encoding.UTF8.GetBytes(ToString());
-    }
-
-    public string ToString()
-    {
-        return RoomName + US + UserName + STX + Text + EOT;
+        IsCancelled = false;
     }
 }
