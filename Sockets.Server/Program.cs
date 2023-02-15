@@ -11,27 +11,37 @@ CancellationTokenSource tokenSource = new CancellationTokenSource();
 
 Task.Run(() => StartServer(tokenSource.Token));
 
-Console.ReadKey();
 
+Console.ReadLine();
 tokenSource.Cancel();
+
+Console.WriteLine("Program closed!");
 
 
 async Task StartServer(CancellationToken token)
 {
+    Task.Run(() => RoomFactory.PrintStatsWorker(token));
+
     TcpListener listener = new TcpListener(serverAddr, serverPort);
     listener.Start();
-    var rooms = new RoomFactory();
     Console.WriteLine("Server starting!");
-    while (!token.IsCancellationRequested)
+    try
     {
-        var TCPclient = await listener.AcceptTcpClientAsync();
-        var client = new Client(TCPclient);
-        var message = client.ReadMessage();
-        var room = rooms[message.RoomName] ?? await rooms.StartRoom(message.RoomName);
-        room.AddUser(client, message.UserName);
+        while (!token.IsCancellationRequested)
+        {
+            var TCPclient = await listener.AcceptTcpClientAsync();
+            Console.WriteLine($"Client Accepted {TCPclient.Client.RemoteEndPoint}");
+            var client = new Client(TCPclient);
+            var message = client.ReadMessage();
+            Task.Run(() => RoomFactory.CreateRoom(message.RoomName))
+                .ContinueWith(async task => task.Result.AddClient(client, message.UserName))
+                .ContinueWith(task => client.Serve(token));
+        }
     }
-
-    rooms.StopAll();
-    listener.Stop();
-    Console.WriteLine("Server stopped!");
+    finally
+    {
+        RoomFactory.StopAll();
+        listener.Stop();
+        Console.WriteLine("Server stopped!");
+    }
 }

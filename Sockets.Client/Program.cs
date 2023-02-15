@@ -1,8 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using Sockets;
 
 int serverPort = 16666;
@@ -20,19 +18,25 @@ BinaryWriter writer = new BinaryWriter(stream);
 
 CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-Console.WriteLine("Start Chat");
+var hello_msg = new Message { RoomName = room, Type = MessageType.System, UserName = user, Text = "CLIENT_HELLO" };
+
+writer.Write(hello_msg.ToString());
+
 Task.Run(ReadFromChat);
 while (true)
 {
     var text = Console.ReadLine();
-    if (text == "exit")
+    if (text == "CLOSE_CHAT")
     {
         break;
     }
 
-    var message = new Message() {RoomName = room, Text = text, UserName = user};
+    var message = new Message { Type = MessageType.Text, RoomName = room, Text = text, UserName = user };
     writer.Write(message.ToString());
 }
+
+writer.Write(
+    new Message { Type = MessageType.System, RoomName = room, Text = "CLIENT_BYE", UserName = user }.ToString());
 
 client.Close();
 
@@ -40,7 +44,8 @@ async Task ReadFromChat()
 {
     while (!tokenSource.IsCancellationRequested)
     {
-        Message message = Message.Deserialize(reader.ReadString());
+        var s = reader.ReadString();
+        var message = Message.Deserialize(s);
         Console.WriteLine($"{message.Time}|{message.UserName}: {message.Text}");
     }
 }

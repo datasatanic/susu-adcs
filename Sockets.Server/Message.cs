@@ -35,13 +35,14 @@ public struct Message
     {
         var s = msg.TrimEnd(EOT).Split(STX);
         var head = s[0].Split(US);
-        return new Message
+        var res = new Message
         {
             Type = (MessageType)int.Parse(head[0]),
             Text = s[1],
             RoomName = head[1],
             UserName = head[2]
         };
+        return res;
     }
 
     public byte[] Serialiaze()
@@ -51,6 +52,6 @@ public struct Message
 
     public string ToString()
     {
-        return RoomName + US + UserName + STX + Text + EOT;
+        return ((int)Type).ToString() + US + RoomName + US + UserName + STX + Text + EOT;
     }
 }
