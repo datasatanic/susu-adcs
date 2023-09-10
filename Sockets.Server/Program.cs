@@ -33,6 +33,7 @@ async Task StartServer(CancellationToken token)
             Console.WriteLine($"Client Accepted {TCPclient.Client.RemoteEndPoint}");
             var client = new Client(TCPclient);
             var message = client.ReadMessage();
+            client.UserName = message.UserName;
             Task.Run(() => RoomFactory.CreateRoom(message.RoomName))
                 .ContinueWith(async task => task.Result.AddClient(client, message.UserName))
                 .ContinueWith(task => client.Serve(token));

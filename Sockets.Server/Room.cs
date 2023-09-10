@@ -26,7 +26,7 @@ public static class RoomFactory
         foreach ((var name, var room) in CurrentRooms)
         {
             Console.WriteLine($"{room.Name}: {room.clients.Count}");
-            foreach (var client in room.clients) Console.WriteLine($"\t{client.RemoteEndPoint}");
+            foreach (var client in room.clients) Console.WriteLine($"{client.UserName}: {client.RemoteEndPoint}");
         }
     }
 
@@ -35,6 +35,18 @@ public static class RoomFactory
         while (!token.IsCancellationRequested)
         {
             PrintStats();
+            await Task.Delay(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    public static async Task CloseEmptyRoomsWorker(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested)
+        {
+            foreach (var room in CurrentRooms)
+                if (room.Value.clients.Count == 0)
+                    if (CurrentRooms.Remove(room.Key, out var tmp))
+                        Console.WriteLine($"{room.Key} closed!");
             await Task.Delay(TimeSpan.FromSeconds(10));
         }
     }
@@ -57,12 +69,12 @@ public class Room
         var hello_msg = new Message
         {
             Type = MessageType.System,
-            RoomName = Name, Text = $"User {user} connected!",
+            RoomName = Name, Text = $"{DateTime.Now}: User {user} connected!",
             UserName = ""
         };
         await SendToAll(hello_msg, client);
 
-        Console.WriteLine($"{Name}: {user} connected");
+        Console.WriteLine($"{DateTime.Now}: {Name}: {user} connected");
         return client;
     }
 
@@ -71,56 +83,16 @@ public class Room
     {
         if (client is null)
             foreach (var _client in clients)
-                _client.WriteMessage(message);
+                await _client.WriteMessage(message);
         else
             foreach (var _client in clients.Where(tcpClient => tcpClient != client))
-                _client.WriteMessage(message);
+                await _client.WriteMessage(message);
     }
 
     public async Task DisconnectAll()
     {
         await SendToAll(new Message
             { Type = MessageType.System, UserName = "", Text = "Room is closed", RoomName = Name });
-        foreach (var client in clients) client.Close();
+        foreach (var client in clients) await client.Close();
     }
-
-
-    // public async Task Serve(CancellationToken token)
-    // {
-    //     while (!token.IsCancellationRequested || !IsCancelled)
-    //         foreach (var client in clients)
-    //         {
-    //             if (client.DataAvailable)
-    //             {
-    //                 var message = client.ReadMessage();
-    //                 if (message.Type == MessageType.System)
-    //                 {
-    //                     if (message.Text == "CLIENT_BYE")
-    //                     {
-    //                         client.Close();
-    //                         clients.Remove(client);
-    //                         await SendToAll(new Message()
-    //                         {
-    //                             Type = MessageType.System, Text = $"User {message.UserName} disconnected!",
-    //                             RoomName = Name
-    //                         });
-    //                     }
-    //
-    //                     continue;
-    //                 }
-    //
-    //                 await SendToAll(message, client);
-    //             }
-    //             Console.WriteLine("{0}{1}{2} No data",DateTime.Now,client.RemoteEndPoint);
-    //         }
-    //
-    //     await SendToAll(new Message
-    //         { Type = MessageType.System, UserName = "", Text = "Room is closed", RoomName = Name });
-    //     foreach (var client in clients) client.Close();
-    // }
-
-    // public async Task Stop()
-    // {
-    //     IsCancelled = false;
-    // }
 }

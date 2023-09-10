@@ -14,6 +14,7 @@ public class Client
     }
 
     public Room room { get; set; }
+    public string UserName { get; set; } = "unknown";
 
     public EndPoint RemoteEndPoint => Connection.Client.RemoteEndPoint;
 
@@ -22,9 +23,17 @@ public class Client
     private BinaryWriter Writer { get; }
     public bool DataAvailable => Connection.GetStream().DataAvailable;
 
-    public void WriteMessage(Message message)
+    public async Task WriteMessage(Message message)
     {
-        Writer.Write(message.ToString());
+        try
+        {
+            Writer.Write(message.ToString());
+        }
+        catch (IOException e)
+        {
+            Console.WriteLine($"Client {RemoteEndPoint} died. Closing");
+            await Close();
+        }
     }
 
     public Message ReadMessage()
@@ -43,14 +52,6 @@ public class Client
             {
                 if (msg.Text == "CLIENT_BYE")
                 {
-                    Close();
-                    room.clients.Remove(this);
-                    await room.SendToAll(new Message
-                    {
-                        Type = MessageType.System,
-                        Text = $"User {msg.UserName} disconnected!",
-                        RoomName = room.Name
-                    });
                 }
 
                 continue;
@@ -59,12 +60,19 @@ public class Client
             await room.SendToAll(msg, this);
         }
 
-        Close();
+        await Close();
     }
 
 
-    public void Close()
+    public async Task Close()
     {
+        room.clients.Remove(this);
+        await room.SendToAll(new Message
+        {
+            Type = MessageType.System,
+            Text = $"User {UserName} disconnected!",
+            RoomName = room.Name
+        });
         Connection.Close();
     }
 }

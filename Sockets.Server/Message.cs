@@ -12,6 +12,16 @@ public enum MessageType
 // <MessageType><US><Комната><US><Имя Пользователя><STX><Сообщение><EOT>
 public struct Message
 {
+    public static Message HelloMessage(string room, string user)
+    {
+        return new Message { RoomName = room, Type = MessageType.System, UserName = user, Text = "CLIENT_HELLO" };
+    }
+
+    public static Message ByeMessage(string room, string user)
+    {
+        return new Message { RoomName = room, Type = MessageType.System, UserName = user, Text = "CLIENT_BYE" };
+    }
+
     public Message()
     {
     }
