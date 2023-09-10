@@ -5,9 +5,11 @@ using Sockets;
 
 int serverPort = 16666;
 string serverAddr = "localhost";
-
+NAME:
 Console.Write("What is your nickname?: ");
 string user = Console.ReadLine();
+if (string.IsNullOrEmpty(user)) goto NAME;
+
 Console.Write("What room will you use?: ");
 var room = Console.ReadLine();
 room = string.IsNullOrEmpty(room) ? "General" : room;
@@ -35,6 +37,14 @@ while (!tokenSource.IsCancellationRequested)
     if (text == "CLOSE_CHAT")
     {
         break;
+    }
+
+    if (text.StartsWith("CHANGE_ROOM"))
+    {
+        var new_room = text.Substring("CHANGE_ROOM".Length).TrimStart();
+        writer.Write(Message.ChangeRoom(new_room, user).ToString());
+        room = new_room;
+        continue;
     }
 
     var message = new Message { Type = MessageType.Text, RoomName = room, Text = text, UserName = user };
@@ -71,7 +81,7 @@ async Task ReadFromChat()
             var message = Message.Deserialize(s);
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.Beep();
-            Console.WriteLine("\r({0})|{1}: {2}", message.Time, message.UserName, message.Text);
+            Console.WriteLine("\r{0}|{3}|{1}: {2}", message.Time, message.UserName, message.Text, message.RoomName);
             Console.ResetColor();
             Console.Write($"{room}: ");
         }

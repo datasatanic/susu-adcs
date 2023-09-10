@@ -21,13 +21,16 @@ public static class RoomFactory
 
     public static void PrintStats()
     {
+        Console.WriteLine("*******");
         if (CurrentRooms.Count == 0) Console.WriteLine("No rooms!");
 
         foreach ((var name, var room) in CurrentRooms)
         {
-            Console.WriteLine($"{room.Name}: {room.clients.Count}");
+            Console.WriteLine($"== {room.Name} - {room.clients.Count} ==");
             foreach (var client in room.clients) Console.WriteLine($"{client.UserName}: {client.RemoteEndPoint}");
         }
+
+        Console.WriteLine("*******");
     }
 
     public static async Task PrintStatsWorker(CancellationToken token)
@@ -58,7 +61,7 @@ public class Room
     public string Name { get; set; }
     public List<Client> clients { get; set; } = new();
 
-    public async Task<Client> AddClient(Client client, string user)
+    public async Task<Client> AddClient(Client client)
     {
         lock (lock_object)
         {
@@ -69,13 +72,23 @@ public class Room
         var hello_msg = new Message
         {
             Type = MessageType.System,
-            RoomName = Name, Text = $"{DateTime.Now}: User {user} connected!",
-            UserName = ""
+            RoomName = Name, Text = $"{DateTime.Now}: User {client.UserName} connected!",
+            UserName = "SYSTEM"
         };
         await SendToAll(hello_msg, client);
 
-        Console.WriteLine($"{DateTime.Now}: {Name}: {user} connected");
+        Console.WriteLine($"{DateTime.Now}: {Name}: {client.UserName} connected");
         return client;
+    }
+
+    public async Task RemoveClient(Client client)
+    {
+        lock (lock_object)
+        {
+            clients.Remove(client);
+        }
+
+        await SendToAll(Message.ByeMessage(Name, client.UserName));
     }
 
 

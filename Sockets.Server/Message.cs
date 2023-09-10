@@ -22,6 +22,12 @@ public struct Message
         return new Message { RoomName = room, Type = MessageType.System, UserName = user, Text = "CLIENT_BYE" };
     }
 
+    public static Message ChangeRoom(string room, string user)
+    {
+        return new Message { RoomName = room, Type = MessageType.System, UserName = user, Text = "CHANGE_ROOM" };
+    }
+
+
     public Message()
     {
     }

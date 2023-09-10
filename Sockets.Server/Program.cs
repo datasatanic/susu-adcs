@@ -20,22 +20,21 @@ Console.WriteLine("Program closed!");
 
 async Task StartServer(CancellationToken token)
 {
-    Task.Run(() => RoomFactory.PrintStatsWorker(token));
-
     TcpListener listener = new TcpListener(serverAddr, serverPort);
     listener.Start();
     Console.WriteLine("Server starting!");
+    Task.Run(() => RoomFactory.PrintStatsWorker(token));
     try
     {
         while (!token.IsCancellationRequested)
         {
-            var TCPclient = await listener.AcceptTcpClientAsync();
+            var TCPclient = await listener.AcceptTcpClientAsync(token);
             Console.WriteLine($"Client Accepted {TCPclient.Client.RemoteEndPoint}");
             var client = new Client(TCPclient);
             var message = client.ReadMessage();
             client.UserName = message.UserName;
             Task.Run(() => RoomFactory.CreateRoom(message.RoomName))
-                .ContinueWith(async task => task.Result.AddClient(client, message.UserName))
+                .ContinueWith(async task => task.Result.AddClient(client))
                 .ContinueWith(task => client.Serve(token));
         }
     }

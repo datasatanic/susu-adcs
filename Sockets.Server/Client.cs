@@ -52,6 +52,13 @@ public class Client
             {
                 if (msg.Text == "CLIENT_BYE")
                 {
+                    break;
+                }
+
+                if (msg.Text == "CHANGE_ROOM")
+                {
+                    await room.RemoveClient(this);
+                    await RoomFactory.CreateRoom(msg.RoomName).AddClient(this);
                 }
 
                 continue;
