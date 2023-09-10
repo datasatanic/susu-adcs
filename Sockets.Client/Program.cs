@@ -1,13 +1,15 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Diagnostics;
 using System.Net.Sockets;
 using Sockets;
 using Sockets.Client;
 
 string[] good_ans = { "yes", "y", "ok" };
 
-int serverPort = 16666;
-string serverAddr = "localhost";
+var serverAddr = args.ElementAtOrDefault(0) ?? "0.0.0.0";
+var serverPort = int.Parse(args.ElementAtOrDefault(1) ?? "16666");
+
 NAME:
 Console.Write("What is your nickname?: ");
 string user = Console.ReadLine();
@@ -73,14 +75,21 @@ while (!tokenSource.IsCancellationRequested)
     }
 
     message ??= new Message { Type = MessageType.Text, RoomName = room, Text = text, UserName = user };
-    writer.Write(message.ToString());
+    try
+    {
+        writer.Write(message.ToString());
+    }
+    catch (IOException e)
+    {
+        break;
+    }
 }
 
 try
 {
     writer.Write(Message.ByeMessage(room, user).ToString());
 }
-catch (IOException e)
+catch (SocketException e)
 {
 }
 catch (Exception e)
@@ -90,6 +99,7 @@ catch (Exception e)
 }
 finally
 {
+    fileServer.Stop();
     client.Close();
 }
 
@@ -127,8 +137,27 @@ async Task ReadFromChat()
     }
 }
 
-
 async Task LoadFile(FileMessage message)
 {
-    Console.WriteLine("DOWNOLADING FILE");
+    try
+    {
+        var download_folder = $"{user}_Downloads";
+        Directory.CreateDirectory(download_folder);
+        var client = new TcpClient();
+        await client.ConnectAsync(message.FileServer);
+        var writer = new BinaryWriter(client.GetStream());
+        writer.Write(message.FileLink);
+        var file_path = download_folder + '/' + message.FileInfo.Name;
+        var file = File.Create(file_path);
+        client.GetStream().CopyTo(file);
+        Console.WriteLine($"FILE {file_path} DOWNLOADED! {file.Length.GetReadableFileSize()}");
+        file.Close();
+        client.Close();
+        if (!OperatingSystem.IsWindows())
+            Process.Start("open", Path.Combine(Environment.CurrentDirectory, download_folder));
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+    }
 }

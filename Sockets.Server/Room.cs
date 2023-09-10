@@ -21,7 +21,7 @@ public static class RoomFactory
 
     public static void PrintStats()
     {
-        Console.WriteLine("*******");
+        Console.WriteLine($"******* {DateTime.Now}");
         if (CurrentRooms.Count == 0) Console.WriteLine("No rooms!");
 
         foreach ((var name, var room) in CurrentRooms)
@@ -31,7 +31,7 @@ public static class RoomFactory
             Console.WriteLine("Files:");
             foreach (var uploaded in room.FileMessages)
                 Console.WriteLine(
-                    $"{uploaded.FileServer} - {uploaded.FileInfo.Name} ({uploaded.FileSize.GetReadableFileSize()}) ");
+                    $"{uploaded.FileServer} - {uploaded.FileInfo.Name} ({uploaded.FileSize.GetReadableFileSize()}) - {uploaded.FileLink}");
         }
 
         Console.WriteLine("*******");

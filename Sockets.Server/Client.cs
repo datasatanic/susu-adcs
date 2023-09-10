@@ -99,6 +99,7 @@ public class Client
     public async Task Close()
     {
         room.clients.Remove(this);
+        room.FileMessages.RemoveAll(message => message.UserName == UserName);
         await room.SendToAll(new Message
         {
             Type = MessageType.System,

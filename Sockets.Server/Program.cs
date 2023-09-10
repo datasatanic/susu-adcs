@@ -2,8 +2,8 @@
 using System.Net.Sockets;
 using Sockets;
 
-int serverPort = 16666;
-IPAddress serverAddr = IPAddress.Parse("0.0.0.0");
+var serverAddr = IPAddress.Parse(args.ElementAtOrDefault(0) ?? "0.0.0.0");
+var serverPort = int.Parse(args.ElementAtOrDefault(1) ?? "16666");
 
 
 CancellationTokenSource tokenSource = new CancellationTokenSource();
@@ -22,7 +22,7 @@ async Task StartServer(CancellationToken token)
 {
     TcpListener listener = new TcpListener(serverAddr, serverPort);
     listener.Start();
-    Console.WriteLine("Server starting!");
+    Console.WriteLine($"Server starting! {serverAddr}:{serverPort}");
     Task.Run(() => RoomFactory.PrintStatsWorker(token));
     try
     {

@@ -32,14 +32,24 @@ public class FileServer : IDisposable
     {
         while (!token.IsCancellationRequested)
         {
-            using var client = await _listener.AcceptTcpClientAsync(token);
-            Console.WriteLine($"Client Accepted {client.Client.RemoteEndPoint}");
-            var reader = new BinaryReader(client.GetStream());
-            var writer = new BinaryWriter(client.GetStream());
-            var file_guid = Files.GetValueOrDefault(reader.ReadString(), null);
-            if (file_guid is null) client.Close();
-            writer.Write(File.ReadAllBytes(file_guid.FullName));
-            client.Close();
+            try
+            {
+                using var client = await _listener.AcceptTcpClientAsync(token);
+                Console.WriteLine($"Client Accepted {client.Client.RemoteEndPoint}");
+                var reader = new BinaryReader(client.GetStream());
+                var writer = new BinaryWriter(client.GetStream());
+                var file_id = reader.ReadString();
+                var file_guid = Files.GetValueOrDefault(file_id, null);
+                Console.WriteLine($"Send {file_guid.Name}");
+                if (file_guid is null) client.Close();
+                writer.Write(File.ReadAllBytes(file_guid.FullName));
+                client.Close();
+                Console.WriteLine("Transmission ended!");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Transmission failed!");
+            }
         }
     }
 }
