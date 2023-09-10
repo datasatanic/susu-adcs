@@ -50,17 +50,42 @@ public class Client
 
             if (msg.Type == MessageType.System)
             {
-                if (msg.Text == "CLIENT_BYE")
+                switch (msg.Text)
                 {
-                    break;
+                    case "CLIENT_BYE":
+                        break;
+                    case "CHANGE_ROOM":
+                        if (msg.RoomName == room.Name) continue;
+                        await room.RemoveClient(this);
+                        await RoomFactory.CreateRoom(msg.RoomName).AddClient(this);
+                        break;
                 }
 
-                if (msg.Text == "CHANGE_ROOM")
-                {
-                    await room.RemoveClient(this);
-                    await RoomFactory.CreateRoom(msg.RoomName).AddClient(this);
-                }
+                continue;
+            }
 
+            if (msg.Type == MessageType.FileUpload)
+            {
+                var message = FileMessage.GetFromMessage(msg);
+                room.FileMessages.Add(message);
+                await room.SendToAll(new Message
+                {
+                    RoomName = room.Name,
+                    Type = MessageType.System,
+                    UserName = UserName,
+                    Text =
+                        $"User - {UserName} upload file: {message.FileInfo.Name} {message.FileSize.GetReadableFileSize()} - {message.FileLink}"
+                });
+                continue;
+            }
+
+            if (msg.Type == MessageType.FileLoad)
+            {
+                var fileMessage = room.FileMessages.FirstOrDefault(message => message.FileLink == msg.Text, null);
+                if (fileMessage is null) continue;
+
+                fileMessage.Type = MessageType.FileLoad;
+                await WriteMessage(fileMessage);
                 continue;
             }
 
@@ -81,5 +106,23 @@ public class Client
             RoomName = room.Name
         });
         Connection.Close();
+    }
+}
+
+public static class ClientExtenstions
+{
+    private static readonly string[] Units = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+
+    public static string GetReadableFileSize(this long size) // Size in bytes
+    {
+        var unitIndex = 0;
+        while (size >= 1024)
+        {
+            size /= 1024;
+            ++unitIndex;
+        }
+
+        var unit = Units[unitIndex];
+        return string.Format("{0:0.#} {1}", size, unit);
     }
 }

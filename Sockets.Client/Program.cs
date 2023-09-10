@@ -2,6 +2,9 @@
 
 using System.Net.Sockets;
 using Sockets;
+using Sockets.Client;
+
+string[] good_ans = { "yes", "y", "ok" };
 
 int serverPort = 16666;
 string serverAddr = "localhost";
@@ -28,6 +31,10 @@ Console.CancelKeyPress += (sender, eventArgs) => tokenSource.Cancel();
 writer.Write(Message.HelloMessage(room, user).ToString());
 
 Task.Run(ReadFromChat);
+var fileServer = new FileServer();
+fileServer.Start();
+Console.WriteLine($"\rFileServer on: {fileServer.EndPoint}");
+Task.Run(() => fileServer.Serve(tokenSource.Token));
 while (!tokenSource.IsCancellationRequested)
 {
     Console.Write($"{room}: ");
@@ -39,17 +46,34 @@ while (!tokenSource.IsCancellationRequested)
         break;
     }
 
+    Message? message = null;
     if (text.StartsWith("CHANGE_ROOM"))
     {
         var new_room = text.Substring("CHANGE_ROOM".Length).TrimStart();
-        writer.Write(Message.ChangeRoom(new_room, user).ToString());
+        new_room = string.IsNullOrEmpty(new_room) ? "General" : room;
+
+        message = Message.ChangeRoom(new_room, user);
         room = new_room;
-        continue;
     }
 
-    var message = new Message { Type = MessageType.Text, RoomName = room, Text = text, UserName = user };
+    if (text.StartsWith("FILE_UPLOAD"))
+    {
+        var path = text.Substring("FILE_UPLOAD".Length).TrimStart();
+        var tmp = FileMessage.Create(room, user, path, fileServer.EndPoint);
+        if (tmp is null) continue;
+
+        fileServer.Files.AddOrUpdate(tmp.FileLink, tmp.FileInfo, (s, info) => info);
+        message = tmp;
+    }
+
+    if (text.StartsWith("FILE_LOAD"))
+    {
+        var file_id = text.Substring("FILE_LOAD".Length).TrimStart();
+        message = Message.LoadFile(room, user, file_id);
+    }
+
+    message ??= new Message { Type = MessageType.Text, RoomName = room, Text = text, UserName = user };
     writer.Write(message.ToString());
-    writer.Flush();
 }
 
 try
@@ -79,6 +103,12 @@ async Task ReadFromChat()
         {
             var s = reader.ReadString();
             var message = Message.Deserialize(s);
+            if (message.Type == MessageType.FileLoad)
+            {
+                await LoadFile(FileMessage.GetFromMessage(message));
+                continue;
+            }
+
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.Beep();
             Console.WriteLine("\r{0}|{3}|{1}: {2}", message.Time, message.UserName, message.Text, message.RoomName);
@@ -95,4 +125,10 @@ async Task ReadFromChat()
             Console.WriteLine(e);
         }
     }
+}
+
+
+async Task LoadFile(FileMessage message)
+{
+    Console.WriteLine("DOWNOLADING FILE");
 }

@@ -28,6 +28,10 @@ public static class RoomFactory
         {
             Console.WriteLine($"== {room.Name} - {room.clients.Count} ==");
             foreach (var client in room.clients) Console.WriteLine($"{client.UserName}: {client.RemoteEndPoint}");
+            Console.WriteLine("Files:");
+            foreach (var uploaded in room.FileMessages)
+                Console.WriteLine(
+                    $"{uploaded.FileServer} - {uploaded.FileInfo.Name} ({uploaded.FileSize.GetReadableFileSize()}) ");
         }
 
         Console.WriteLine("*******");
@@ -57,6 +61,7 @@ public static class RoomFactory
 
 public class Room
 {
+    public List<FileMessage> FileMessages = new();
     public object lock_object = new();
     public string Name { get; set; }
     public List<Client> clients { get; set; } = new();
