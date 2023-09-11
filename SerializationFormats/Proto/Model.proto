@@ -1,0 +1,16 @@
+syntax = "proto3";
+package model;
+
+message Model{
+  string LongString = 1;
+  repeated int32  IntArray = 2;
+  InnerModel InnerModel = 3;
+  double DoubleValue = 4;
+  int64 LongValue = 5;
+  map<string, string> Dictionary = 6;
+}
+message InnerModel{
+  string InnerString = 1;
+  int32 InnerInt = 2;
+  double InnerDouble = 3;
+}

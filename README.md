@@ -2,7 +2,7 @@
 
 ## Lab 1: Sockets
 
-Проекты: Sockets.Client, Sockets.Server
+Projects: Sockets.Client, Sockets.Server
 
 ### Sockets.Server
 
@@ -46,4 +46,14 @@ Client Commands:
 - ```FILE_UPLOAD <file path>``` - tell others speakers that you can send file via link (Others recieve message like ``<user name> upload file: <file name> <file size> - <file_link>``)
 - ```FILE_LOAD <file_link>``` - download file from link
 
- 
+## LAb 2: Serialization formats
+
+Projects: SerializationFormats
+
+Requirements: dotnet-sdk:7.*
+
+Start:
+```
+dotnet run -c Release --project SerializationFormats/SerializationFormats.csproj -- --join -f '*'
+```
+> Results in BenchmarkDotnet.Artifacts
