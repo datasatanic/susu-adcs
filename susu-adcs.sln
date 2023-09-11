@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sockets.Client", "Sockets.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerializationFormats", "SerializationFormats\SerializationFormats.csproj", "{6E4653AC-1BD9-44B8-AA2D-887A31F0158E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "REST", "REST\REST.csproj", "{BD7E430D-57FE-41F5-AFE9-28F4DA18AFA4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{6E4653AC-1BD9-44B8-AA2D-887A31F0158E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E4653AC-1BD9-44B8-AA2D-887A31F0158E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E4653AC-1BD9-44B8-AA2D-887A31F0158E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD7E430D-57FE-41F5-AFE9-28F4DA18AFA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD7E430D-57FE-41F5-AFE9-28F4DA18AFA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD7E430D-57FE-41F5-AFE9-28F4DA18AFA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD7E430D-57FE-41F5-AFE9-28F4DA18AFA4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
