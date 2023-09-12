@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "GRPC";
+
+package Social;
+
+message Post{
+  string username = 1;
+  string message = 2;
+  google.protobuf.Timestamp time = 3;
+  int64 likes = 4;
+  repeated Comment comments = 5;
+  optional PostID id = 6;
+}
+
+message PostID{
+  int32 id = 1;
+}
+
+message Comment{
+  string username = 1;
+  string message = 2;
+  google.protobuf.Timestamp time = 3;
+  PostID postid = 4;
+}
+
+message User{
+  string username = 2;
+}
+
+message Message{
+  User user = 1;
+  string message = 2;
+}
+message Empty{}
+
+service Social{
+  rpc AddPost(Post) returns(PostID);
+  rpc AddComment(Comment) returns(Empty);
+  rpc NextPost(PostID) returns(Post);
+  rpc PrevPost(PostID) returns(Post);
+  rpc ReadComments(PostID) returns(stream Comment);
+  rpc LikePost(PostID) returns(Post);
+  rpc SendMessage(Message) returns(Empty);
+  rpc CheckMessages(User) returns(stream Message);
+} 

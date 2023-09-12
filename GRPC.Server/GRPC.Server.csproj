@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>GRPC</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Protobuf Include="Protos\reverse.proto" GrpcServices="Both"/>
+        <Protobuf Include="Protos\social.proto" GrpcServices="Both"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.49.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="obj\"/>
+        <Folder Include="obj\Debug\net7.0\Protos\"/>
+    </ItemGroup>
+
+</Project>

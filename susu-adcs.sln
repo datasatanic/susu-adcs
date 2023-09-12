@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerializationFormats", "Ser
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "REST", "REST\REST.csproj", "{BD7E430D-57FE-41F5-AFE9-28F4DA18AFA4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRPC.Server", "GRPC.Server\GRPC.Server.csproj", "{FF0E4A08-712F-445E-9592-F8552C90C5BD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GRPC.Client", "GRPC.Client\GRPC.Client.csproj", "{D2CFEAA0-DA91-41F1-994B-C8D1FD007120}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +40,13 @@ Global
 		{BD7E430D-57FE-41F5-AFE9-28F4DA18AFA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD7E430D-57FE-41F5-AFE9-28F4DA18AFA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD7E430D-57FE-41F5-AFE9-28F4DA18AFA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF0E4A08-712F-445E-9592-F8552C90C5BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF0E4A08-712F-445E-9592-F8552C90C5BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF0E4A08-712F-445E-9592-F8552C90C5BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF0E4A08-712F-445E-9592-F8552C90C5BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2CFEAA0-DA91-41F1-994B-C8D1FD007120}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2CFEAA0-DA91-41F1-994B-C8D1FD007120}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2CFEAA0-DA91-41F1-994B-C8D1FD007120}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2CFEAA0-DA91-41F1-994B-C8D1FD007120}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
